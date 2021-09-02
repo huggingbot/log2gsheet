@@ -1,4 +1,5 @@
 from helpers.Watcher import Watcher
+from helpers.logging import setup_logging, main_logger as logger
 from helpers.utils import get_sheet
 
 SERVICE_ACCOUNT_FILE = 'keys.json'
@@ -14,6 +15,7 @@ sheet = get_sheet(SERVICE_ACCOUNT_FILE, SCOPES)
 
 
 def on_modified(content: str):
+    logger.info(content)
     if CONTENT_KEY_TEXT not in content:
         return
     output = []
@@ -34,6 +36,7 @@ WATCH_FILES = {'/logs/dorabot.log': on_modified}
 
 
 def main():
+    setup_logging()
     watcher = Watcher(WATCH_FILES)
     watcher.run()
 
