@@ -1,6 +1,8 @@
+from datetime import datetime
+
 from helpers.Watcher import Watcher
 from helpers.logging import setup_logging, main_logger as logger
-from helpers.utils import get_sheet
+from helpers.utils import get_sheet, datetime_to_excel_date
 
 SERVICE_ACCOUNT_FILE = 'keys.json'
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -27,6 +29,8 @@ def on_modified(content: str):
             for i in EXCLUDED_VALUES:
                 val = val.replace(i, '')
             output.append(val.strip())
+    excel_date = datetime_to_excel_date(datetime.now())
+    output.insert(0, excel_date)
     logger.info(output)
     sheet.values().append(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2', valueInputOption='USER_ENTERED',
                           body={'values': [output]}).execute()
