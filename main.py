@@ -15,7 +15,6 @@ sheet = get_sheet(SERVICE_ACCOUNT_FILE, SCOPES)
 
 
 def on_modified(content: str):
-    logger.info(content)
     if CONTENT_KEY_TEXT not in content:
         return
     output = []
@@ -28,6 +27,7 @@ def on_modified(content: str):
             for i in EXCLUDED_VALUES:
                 val = val.replace(i, '')
             output.append(val.strip())
+    logger.info(output)
     sheet.values().append(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2', valueInputOption='USER_ENTERED',
                           body={'values': [output]}).execute()
 
