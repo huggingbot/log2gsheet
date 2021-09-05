@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Callable
 
 from helpers.Watcher import Watcher
 from helpers.logging import setup_logging, main_logger as logger
@@ -16,29 +17,32 @@ EXCLUDED_VALUES = ['USD', '%']
 sheet = get_sheet(SERVICE_ACCOUNT_FILE, SCOPES)
 
 
-def on_modified(content: str):
-    if CONTENT_KEY_TEXT not in content:
-        return
-    output = []
-    for text in content.split('\n'):
-        try:
-            key, val = text.split(': ')
-        except ValueError:
-            continue
-        if key.strip() in CONTENT_COLUMNS:
-            for i in EXCLUDED_VALUES:
-                val = val.replace(i, '')
-            output.append(val.strip())
-    excel_date = datetime_to_excel_date(datetime.now())
-    output.insert(0, excel_date)
-    logger.info(output)
-    sheet.values().append(spreadsheetId=SPREADSHEET_ID, range='Sheet1!A2', valueInputOption='USER_ENTERED',
-                          body={'values': [output]}).execute()
+def make_on_modified(rng: str) -> Callable[[str], None]:
+    def on_modified(content: str):
+        if CONTENT_KEY_TEXT not in content:
+            return
+        output = []
+        for text in content.split('\n'):
+            try:
+                key, val = text.split(': ')
+            except ValueError:
+                continue
+            if key.strip() in CONTENT_COLUMNS:
+                for i in EXCLUDED_VALUES:
+                    val = val.replace(i, '')
+                output.append(val.strip())
+        excel_date = datetime_to_excel_date(datetime.now())
+        output.insert(0, excel_date)
+        logger.info(output)
+        sheet.values().append(spreadsheetId=SPREADSHEET_ID, range=rng, valueInputOption='USER_ENTERED',
+                              body={'values': [output]}).execute()
+
+    return on_modified
 
 
 WATCH_FILES = {
-    '/logs/DoraBot1.log': on_modified,
-    '/logs/degen-dora.log': on_modified,
+    '/logs/DoraBot1.log': make_on_modified('Sheet1!A2'),
+    '/logs/degen-dora.log': make_on_modified('Sheet2!A2'),
 }
 
 
