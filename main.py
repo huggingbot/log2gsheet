@@ -36,7 +36,10 @@ def on_modified(content: str):
                           body={'values': [output]}).execute()
 
 
-WATCH_FILES = {'/logs/DoraBot1.log': on_modified}
+WATCH_FILES = {
+    '/logs/DoraBot1.log': on_modified,
+    '/logs/degen-dora.log': on_modified,
+}
 
 
 def main():
