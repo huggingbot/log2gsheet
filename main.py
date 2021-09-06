@@ -10,14 +10,12 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '1ZsVdYrz2bb9E8DJgm04nmR-8Dv6_6JTdb1ixIOomPTU'
 
 CONTENT_KEY_TEXT = 'END OF TRANSACTION REPORT'
-CONTENT_COLUMNS = ['cumulative pnl', 'overall fund', 'overall pnl(%)', 'total losing trade', 'total completed trade',
-                   'active trade', 'leverage']
 EXCLUDED_VALUES = ['USD', '%']
 
 sheet = get_sheet(SERVICE_ACCOUNT_FILE, SCOPES)
 
 
-def make_on_modified(rng: str) -> Callable[[str], None]:
+def make_on_modified(rng: str, columns: list[str]) -> Callable[[str], None]:
     def on_modified(content: str):
         if CONTENT_KEY_TEXT not in content:
             return
@@ -27,7 +25,7 @@ def make_on_modified(rng: str) -> Callable[[str], None]:
                 key, val = text.split(': ')
             except ValueError:
                 continue
-            if key.strip() in CONTENT_COLUMNS:
+            if key.strip() in columns:
                 for i in EXCLUDED_VALUES:
                     val = val.replace(i, '')
                 output.append(val.strip())
@@ -41,8 +39,13 @@ def make_on_modified(rng: str) -> Callable[[str], None]:
 
 
 WATCH_FILES = {
-    '/logs/DoraBot1.log': make_on_modified('Sheet1!A2'),
-    '/logs/degen-dora.log': make_on_modified('Sheet2!A2'),
+    '/logs/DoraBot1.log': make_on_modified('Sheet1!A2',
+                                           ['cumulative pnl', 'overall fund', 'overall pnl(%)', 'total losing trade',
+                                            'total completed trade', 'active trade', 'leverage']),
+    '/logs/degen-dora.log': make_on_modified('Sheet2!A2',
+                                             ['cumulative pnl', 'overall fund', 'overall pnl(%)',
+                                              'total completed trade', 'total losing trade', 'total losing usdt',
+                                              'total losing (%)', 'active trade', 'leverage']),
 }
 
 
